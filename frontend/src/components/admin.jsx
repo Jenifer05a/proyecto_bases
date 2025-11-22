@@ -44,21 +44,22 @@ export default function AdminPanel({ onLogout }) {
         case "categorias": setCategorias(res.data); break;
         case "ventas": setVentas(res.data); break;
         case "detalle_venta": setDetalleVenta(res.data); break;
+        default: break;
       }
     } catch (err) {
-      alert("Error al cargar datos: " + (err.response?.data?.error || err.message));
+      console.error("Error fetching data:", err);
     }
   };
 
   useEffect(() => {
     fetchData(tab);
-    fetchData("municipios");
-    fetchData("categorias");
-    fetchData("productos");
-    fetchData("clientes");
+    if (municipios.length === 0) fetchData("municipios");
+    if (categorias.length === 0) fetchData("categorias");
+    if (productos.length === 0) fetchData("productos");
+    if (clientes.length === 0) fetchData("clientes");
   }, [tab]);
 
-  // ---------------- FUNCIONES CRUD ----------------
+  // ---------------- CRUD ----------------
   const handleInputChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
@@ -129,12 +130,12 @@ export default function AdminPanel({ onLogout }) {
   };
 
   const imprimirTicket = () => {
-    const cliente = clientes.find(c => c.ID_cliente === ventaForm.ID_cliente);
+    const cliente = clientes.find(c => c.ID_cliente === parseInt(ventaForm.ID_cliente));
 
     const contenido = `
       <div style="font-family: Arial; padding: 10px; width: 300px;">
         <h3 style="text-align:center;">Ticket de Venta</h3>
-        <p><strong>Cliente:</strong> ${cliente?.Nombre} ${cliente?.Apellido}</p>
+        <p><strong>Cliente:</strong> ${cliente?.Nombre || 'Cliente'} ${cliente?.Apellido || ''}</p>
         <p><strong>Fecha:</strong> ${fechaVenta}</p>
         <hr/>
         <table style="width:100%; font-size:14px;">
@@ -241,30 +242,37 @@ export default function AdminPanel({ onLogout }) {
         break;
       case "ventas":
         data = ventas;
-        fields = ["Cliente", "Fecha_venta", "Total_pago"];
+        fields = ["ID_cliente", "Fecha_venta", "Total_pago"];
         idField = "ID_venta";
+        showId = true;
         break;
       case "detalle_venta":
         data = detalleVenta;
-        fields = ["Codigo_producto", "Cantidad", "Precio_unitario", "Subtotal"];
+        fields = ["ID_venta", "Codigo_producto", "Cantidad", "Precio_unitario", "Subtotal"];
         idField = "ID_detalle";
         break;
       default:
         break;
     }
 
+    const showGenericForm = tab !== "detalle_venta" && tab !== "ventas";
+    const showActions = tab !== "detalle_venta";
+
     return (
       <div>
         <h2>{tab.toUpperCase()}</h2>
 
-        {/* 🔥 OCULTAR FORMULARIO PARA ventas Y detalle_venta */}
-        {tab !== "ventas" && tab !== "detalle_venta" && (
+        {/* -------- FORMULARIO -------- */}
+        {showGenericForm && (
           <div className="form-add">
-            {fields.filter(f => f !== "Codigo").map(f => (
+            <h4>{editingId ? "Editar Registro" : "Agregar Registro"}</h4>
+
+            {fields.filter(f => f !== idField).map(f => (
               <input
                 key={f}
                 name={f}
                 placeholder={f}
+                type={f.includes("Fecha") ? "date" : "text"}
                 value={form[f] || ""}
                 onChange={handleInputChange}
               />
@@ -288,31 +296,78 @@ export default function AdminPanel({ onLogout }) {
               </select>
             )}
 
-            {editingId ? (
-              <button onClick={() => handleUpdate(tab, idField, editingId)}>Guardar</button>
-            ) : (
-              <button onClick={() => handleAdd(tab)}>Agregar</button>
-            )}
+            <div style={{ marginTop: '10px' }}>
+              {editingId ? (
+                <>
+                  <button className="btn-save" onClick={() => handleUpdate(tab, idField, editingId)}>Guardar Cambios</button>
+                  <button className="btn-delete" onClick={() => { setEditingId(null); setForm({}); }}>Cancelar</button>
+                </>
+              ) : (
+                <button className="btn-save" onClick={() => handleAdd(tab)}>Agregar Nuevo</button>
+              )}
+            </div>
           </div>
         )}
 
+        {/* -------- TABLA -------- */}
         <table>
           <thead>
             <tr>
-              {fields.filter(f => showId || f !== "Codigo").map(h => <th key={h}>{h}</th>)}
-              <th>Acciones</th>
+              {showId && <th>ID</th>}
+              {fields.filter(f => f !== idField).map(h => <th key={h}>{h}</th>)}
+              {showActions && <th>Acciones</th>}
             </tr>
           </thead>
+
           <tbody>
             {data.map(row => (
               <tr key={row[idField]}>
-                {fields.filter(f => showId || f !== "Codigo").map(f => (
-                  <td key={f}>{row[f]}</td>
-                ))}
-                <td>
-                  <button onClick={() => { setForm(row); setEditingId(row[idField]); }}>Editar</button>
-                  <button onClick={() => handleDelete(tab, idField, row[idField])}>Eliminar</button>
-                </td>
+                {showId && <td>{row[idField]}</td>}
+
+                {fields.filter(f => f !== idField).map(f => {
+
+                  if (tab === "ventas" && f === "ID_cliente") {
+                    const cliente = clientes.find(c => c.ID_cliente === row.ID_cliente);
+                    return (
+                      <td key={f}>{cliente ? `${cliente.Nombre} ${cliente.Apellido}` : "Sin datos"}</td>
+                    );
+                  }
+
+                  if (tab === "detalle_venta" && f === "ID_venta") {
+                    const venta = ventas.find(v => v.ID_venta === row.ID_venta);
+                    const cliente = clientes.find(c => c.ID_cliente === venta?.ID_cliente);
+                    return (
+                      <td key={f}>{cliente ? `${cliente.Nombre} ${cliente.Apellido}` : row[f]}</td>
+                    );
+                  }
+
+                  return <td key={f}>{row[f]}</td>;
+                })}
+
+                {showActions && (
+                  <td>
+                    {/* ❌ QUITAR EDITAR EXCLUSIVAMENTE EN TABLA VENTAS */}
+                    {tab !== "ventas" && (
+                      <button
+                        className="btn-edit"
+                        onClick={() => {
+                          setForm(row);
+                          setEditingId(row[idField]);
+                        }}
+                      >
+                        Editar
+                      </button>
+                    )}
+
+                    {/* SIEMPRE ELIMINAR */}
+                    <button
+                      className="btn-delete"
+                      onClick={() => handleDelete(tab, idField, row[idField])}
+                    >
+                      Eliminar
+                    </button>
+                  </td>
+                )}
               </tr>
             ))}
           </tbody>
@@ -321,10 +376,10 @@ export default function AdminPanel({ onLogout }) {
     );
   };
 
-  // ---------------- FORMULARIO ESPECIAL DE VENTAS ----------------
+  // ---------------- FORM VENTAS ----------------
   const renderVentaForm = () => (
     <div className="venta-form">
-      <h3>Registrar Venta</h3>
+      <h3>Registrar Nueva Venta</h3>
 
       <label>Cliente:</label>
       <select
@@ -333,7 +388,9 @@ export default function AdminPanel({ onLogout }) {
       >
         <option value="">Selecciona cliente</option>
         {clientes.map(c => (
-          <option key={c.ID_cliente} value={c.ID_cliente}>{c.Nombre} {c.Apellido}</option>
+          <option key={c.ID_cliente} value={c.ID_cliente}>
+            {c.Nombre} {c.Apellido}
+          </option>
         ))}
       </select>
 
@@ -363,7 +420,7 @@ export default function AdminPanel({ onLogout }) {
           onChange={(e) => setCantidad(parseInt(e.target.value))}
         />
 
-        <button onClick={addProductoToVenta}>+ Agregar Producto</button>
+        <button className="btn-save" onClick={addProductoToVenta}>+ Agregar Producto</button>
       </div>
 
       <h4>Resumen de Productos</h4>
@@ -384,38 +441,37 @@ export default function AdminPanel({ onLogout }) {
               <td>{p.cantidad}</td>
               <td>${p.Precio.toFixed(2)}</td>
               <td>${p.subtotal.toFixed(2)}</td>
-              <td><button onClick={() => removeProducto(i)}>Eliminar</button></td>
+              <td><button className="btn-delete" onClick={() => removeProducto(i)}>Eliminar</button></td>
             </tr>
           ))}
         </tbody>
       </table>
 
       <h4>Total: ${total.toFixed(2)}</h4>
-      <button onClick={handleGuardarVenta}>Guardar Venta</button>
+      <button className="btn-save" onClick={handleGuardarVenta}>Guardar Venta</button>
     </div>
   );
 
   return (
     <div className="admin-panel">
       <h1>Panel de Administrador</h1>
+      {onLogout && <button className="btn-delete" onClick={onLogout} style={{ float: 'right' }}>Cerrar Sesión</button>}
 
       <div className="tabs">
-        {["clientes","municipios","productos","categorias","ventas","detalle_venta"].map(t => (
+        {["clientes", "municipios", "productos", "categorias", "ventas", "detalle_venta"].map(t => (
           <button
             key={t}
-            onClick={() => setTab(t)}
+            onClick={() => { setTab(t); setEditingId(null); setForm({}); }}
             className={tab === t ? "active" : ""}
           >
-            {t.toUpperCase()}
+            {t.toUpperCase().replace("_", " ")}
           </button>
         ))}
       </div>
 
       <div className="tab-content">
         {renderTable()}
-
-        {/* 🔥 SOLO APARECE EL FORMULARIO DE VENTAS EN TAB "ventas" */}
-        {tab === "ventas" && renderVentaForm()}
+        {tab === "ventas" && !editingId && renderVentaForm()}
       </div>
     </div>
   );

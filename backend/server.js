@@ -2,9 +2,9 @@ import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
 import sql from "mssql";
-import adminRoutes from "./adminRoutes.js"; // CRUD
-import authRoutes from "./authRoutes.js"; // ✅ Importa el router de autenticación
-import userRoutes from "./userRoutes.js"
+import adminRoutes from "./adminRoutes.js"; 
+import authRoutes from "./authRoutes.js"; 
+import userRoutes from "./userRoutes.js";
 
 dotenv.config();
 
@@ -12,9 +12,7 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-/* ---------------------------------------------
-   🔌 CONFIGURACIÓN DE SQL SERVER DESDE .env
---------------------------------------------- */
+// ---------------- CONFIGURACIÓN DE SQL SERVER ----------------
 export const dbConfig = {
   user: process.env.DB_USER,
   password: process.env.DB_PASSWORD,
@@ -28,7 +26,6 @@ export const dbConfig = {
 };
 
 let pool;
-
 export async function getConnection() {
   try {
     if (!pool) {
@@ -42,18 +39,13 @@ export async function getConnection() {
   }
 }
 
-/* ---------------------------------------------
-   🔗 RUTAS
---------------------------------------------- */
-app.use("/api/admin", adminRoutes);
-app.use("/api/auth", authRoutes); // ✅ Ahora la ruta /api/auth/login existe
-app.use("/api/user", userRoutes);
+// ---------------- RUTAS ----------------
+app.use("/api/admin", adminRoutes); 
+app.use("/api/auth", authRoutes);   
+app.use("/api/user", userRoutes);   
 
-/* ---------------------------------------------
-   🚀 INICIAR SERVIDOR
---------------------------------------------- */
+// ---------------- SERVIDOR ----------------
 const PORT = process.env.PORT || 5000;
-
 app.listen(PORT, async () => {
   try {
     await getConnection();

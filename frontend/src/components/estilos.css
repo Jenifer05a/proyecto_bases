@@ -288,3 +288,173 @@ table th {
     margin: 20px;
   }
 }
+/* ----- BOTONES GENERALES ----- */
+button {
+  padding: 8px 14px;
+  border: none;
+  cursor: pointer;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: bold;
+  transition: 0.2s ease-in-out;
+}
+
+/* Botón guardar / agregar */
+button.btn-save,
+button[type="submit"],
+button:not(.btn-edit):not(.btn-delete) {
+  background-color: #4CAF50;
+  color: white;
+}
+
+button.btn-save:hover,
+button[type="submit"]:hover,
+button:not(.btn-edit):not(.btn-delete):hover {
+  background-color: #43a047;
+}
+
+/* Botón editar */
+.btn-edit {
+  background-color: #2196F3;
+  color: white;
+}
+
+.btn-edit:hover {
+  background-color: #1976D2;
+}
+
+/* Botón eliminar */
+.btn-delete {
+  background-color: #f44336;
+  color: white;
+  margin-left: 6px;
+}
+
+.btn-delete:hover {
+  background-color: #d32f2f;
+}
+
+/* Botón cerrar sesión */
+.admin-panel > button {
+  background-color: #FF9800;
+  color: white;
+}
+
+.admin-panel > button:hover {
+  background-color: #FB8C00;
+}
+
+/* Estilos pestañas */
+.tabs button {
+  padding: 10px 18px;
+  margin-right: 6px;
+  border-radius: 6px;
+  background: #e0e0e0;
+  border: none;
+}
+
+.tabs button.active {
+  background: #1976D2;
+  color: white;
+}
+
+.tabs button:hover {
+  background: #bdbdbd;
+}
+/* ============================
+   CONTENEDOR DEL TICKET
+============================ */
+.ticket-container {
+  width: 320px;                         /* ancho típico de ticket */
+  background: #ffffff;
+  padding: 20px;
+  margin: auto;
+  border-radius: 12px;
+  border: 1px solid #dcdcdc;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+  font-family: "Segoe UI", Arial, sans-serif;
+}
+
+/* Encabezado */
+.ticket-header {
+  text-align: center;
+  margin-bottom: 15px;
+}
+
+.ticket-header h2 {
+  margin: 0;
+  font-size: 20px;
+  color: #333;
+  font-weight: 700;
+}
+
+.ticket-header small {
+  font-size: 12px;
+  color: #555;
+}
+
+/* Información general */
+.ticket-info {
+  font-size: 14px;
+  margin-bottom: 10px;
+}
+
+.ticket-info p {
+  margin: 4px 0;
+  color: #444;
+}
+
+/* Separador */
+.ticket-separator {
+  border-top: 1px dashed #aaa;
+  margin: 12px 0;
+}
+
+/* Tabla de productos */
+.ticket-table {
+  width: 100%;
+  font-size: 14px;
+  border-collapse: collapse;
+}
+
+.ticket-table th {
+  text-align: left;
+  font-weight: 600;
+  padding-bottom: 6px;
+  color: #333;
+}
+
+.ticket-table td {
+  padding: 4px 0;
+  color: #444;
+}
+
+/* Totales */
+.ticket-total {
+  margin-top: 12px;
+  font-size: 16px;
+  font-weight: bold;
+  text-align: right;
+  color: #222;
+}
+
+/* Mensaje final */
+.ticket-footer {
+  text-align: center;
+  margin-top: 18px;
+  font-size: 13px;
+  color: #555;
+}
+
+/* Para impresión */
+@media print {
+  body {
+    background: white;
+  }
+
+  .ticket-container {
+    box-shadow: none;
+    border-radius: 0;
+    border: none;
+  }
+}
